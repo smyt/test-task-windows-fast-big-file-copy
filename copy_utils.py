@@ -5,7 +5,9 @@ import shutil
 import subprocess
 import sys
 
-if sys.version_info[0] >= 3:
+IS_PYTHON3 = sys.version_info[0] >= 3
+
+if IS_PYTHON3:
     raw_input = input
 
 
@@ -18,10 +20,17 @@ def get_path(file_path):
     if os.name == 'nt':  # if windows
         # based on https://stackoverflow.com/questions/36219317/pathname-too-long-to-open/36219497 solution
         # to work around long paths issue on windows, still wont helps with long file names
-        path = os.path.abspath(file_path)
+        if not IS_PYTHON3 and not isinstance(file_path, unicode):
+            file_path = file_path.decode('utf8')
+        splited_path = file_path.split("\\", 1)
+        if len(splited_path) > 1:
+            path = os.path.join(os.path.abspath(splited_path[0]), splited_path[1])
+        else:
+            path = os.path.abspath(file_path)
+        # path = file_path
         if path.startswith("\\\\"):
-            return "\\\\?\\UNC\\" + path[2:]
-        return "\\\\?\\" + path
+            return u"\\\\?\\UNC\\" + path[2:]
+        return u"\\\\?\\" + path
     return file_path
 
 
